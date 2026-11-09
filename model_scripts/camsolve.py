@@ -4,7 +4,7 @@ World frame = model local frame in metres (x, y, z), z = 0 at SSL, FFL = 0.08.
 Point:  (X, Y, Z) -> (u, v)
 Line:   3D line given by two points A, B; image samples (u, v) must lie on its projection.
 """
-import json, sys
+import json, os, sys
 import numpy as np
 from scipy.optimize import least_squares
 from scipy.spatial.transform import Rotation as Rot
@@ -149,7 +149,8 @@ if __name__ == "__main__":
         allres[n] = o
         print(f"{n:26s} C=({o['C'][0]:.2f},{o['C'][1]:.2f},{o['C'][2]:.2f}) f={o['f_px']:.0f}px "
               f"hfov={o['hfov_deg']:.0f} rms_pts={o['rms_pts']:.1f} rms_lines={o['rms_lines']:.1f}")
-    json.dump(allres, open("/tmp/opencode/sf/cams.json", "w"), indent=1)
+    out_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "cams_free_f.json")
+    json.dump(allres, open(out_path, "w"), indent=1)
 
 
 F_FIXED = 505.0

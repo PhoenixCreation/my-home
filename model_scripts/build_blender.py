@@ -273,8 +273,11 @@ boxes("Floor_Finish_Toilets_Wash (anti-skid)", "Structure", M["wetfloor"],
 ceil = prism("Ceiling_Slab", "Ceiling (hidden)", M["slab"], FOOTPRINT, SOFFIT, FTF)
 
 # ---------------------------------------------------------------- finishes (skirting, wall tiles)
-import json as _json
-_fin = _json.load(open("/run/media/phoenix/P3/Projects/Sun Footprints/model_scripts/finish_strips.json"))
+import json as _json, os as _os
+# Resolve relative to the saved .blend (project root); fall back to this script's folder.
+_SCRIPTS = (_os.path.join(_os.path.dirname(bpy.data.filepath), "model_scripts") if bpy.data.filepath
+            else _os.path.dirname(_os.path.abspath(__file__)))
+_fin = _json.load(open(_os.path.join(_SCRIPTS, "finish_strips.json")))
 boxes("Skirting_100mm", "Finishes", M["skirting"], [tuple(s) for s in _fin["skirting"]])
 boxes("Toilet_Wall_Tiles_2275", "Finishes", M["walltile"], [tuple(s) for s in _fin["toilet_dado"]])
 boxes("Wash_Wall_Tiles_to_sill", "Finishes", M["walltile"], [tuple(s) for s in _fin["wash_dado"]])

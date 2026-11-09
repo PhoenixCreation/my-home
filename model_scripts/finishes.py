@@ -1,5 +1,5 @@
 """Precompute skirting and wall-tile (dado) strips with shapely; writes finish_strips.json."""
-import json
+import json, os
 from shapely.geometry import Polygon, box, LineString, Point
 from shapely.ops import unary_union
 from shapely.geometry.polygon import orient
@@ -90,5 +90,5 @@ res = {
     "toilet_dado": strips(WET["toilet1"], 8, 81, 81 + 2275) + strips(WET["toilet2"], 8, 81, 81 + 2275),
     "wash_dado": strips(WET["wash"], 8, 81, 1130),
 }
-json.dump(res, open("/tmp/opencode/sf/finish_strips.json", "w"))
+json.dump(res, open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "finish_strips.json"), "w"))
 print({k: len(v) for k, v in res.items()})

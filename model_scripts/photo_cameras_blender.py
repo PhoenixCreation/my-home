@@ -1,7 +1,10 @@
 import bpy, json, math, os
 from mathutils import Matrix, Vector
-cams = json.load(open("/run/media/phoenix/P3/Projects/Sun Footprints/I-601_photo_cameras.json"))
-IMG_DIR = "/run/media/phoenix/P3/Projects/Sun Footprints/real_images"
+# Project root = folder of the saved .blend; fall back to the parent of this script's folder.
+ROOT = (os.path.dirname(bpy.data.filepath) if bpy.data.filepath
+        else os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+cams = json.load(open(os.path.join(ROOT, "I-601_photo_cameras.json")))
+IMG_DIR = os.path.join(ROOT, "real_images")
 root = bpy.data.objects.get("I-601_ROOT")
 coll = bpy.data.collections.get("Photo Cameras")
 if coll is None:

@@ -5,6 +5,7 @@
 backup.blend
 
 # Python
+model_scripts/cams_free_f.json
 __pycache__/
 *.pyc
 
