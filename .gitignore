@@ -1,0 +1,15 @@
+# Blender autosaves and backups
+*.blend1
+*.blend2
+*.blend@
+backup.blend
+
+# Python
+__pycache__/
+*.pyc
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
