@@ -340,12 +340,12 @@ Built by `model_scripts/furniture_blender.py`. Positions are the starting layout
 
 | Piece | Footprint (x × y, mm) | Height | Notes |
 |---|---|---|---|
-| 3-seater sofa | 3603–4483 × 5340–7440 | 800 | Against the long solid wall shared with Bedroom 2 (x 3583), facing the drawing room |
+| 3-seater sofa | 3883–5983 × 8053–8933 | 800 | Back on the top wall (y 8953, lift side), facing the dining room, one end 300 from the W01 window wall |
 | Small bedroom bed | 115–1537 × 5144–7124 | headboard 1000 | 4.5 × 6.25 ft mattress; head on the top wall (C3 face), side on the window wall, opposite the door |
 | Small bedroom cupboard | 2858–3468 × 5104–7239 | to beam bottom (2295 above floor) | 2 ft deep, on the wall shared with the drawing/dining room |
 | Master bed | 490–2369 × 230–2134 | headboard 1000 | 6 × 6 ft mattress; head on the wall opposite the shared bedroom wall |
-| Master bedroom cupboard | 2743–3353 × 115–2075 | to beam bottom | 2 ft deep from the C2 column face, on the wall shared with Toilet 1, up to the toilet door |
-| L-shaped computer table | 115–1615 × 3489–4089 and 115–715 × 2289–3489 | 750 | In the corner facing the entry door (window wall / shared bedroom wall) |
+| Master bedroom cupboard | 2858–3468 × 115–2075 | to beam bottom | 2 ft deep, flush to the wall shared with Toilet 1, up to the toilet door; column C2 is boxed in inside it |
+| Computer table | 115–1615 × 3489–4089 | 750 | 1500 × 600, along the shared bedroom wall from the window-wall corner |
 | Kitchen trolleys, sink side | under run A, y 2365–3480 (sink unit, 2 doors) and 3520–5078 (two 3-drawer trolleys) | under the counter | Between the existing granite supports |
 | Kitchen trolleys, drawing-room side | under run B, x 5848–7349 | under the counter | Two 3-drawer trolleys |
 | Kitchen wall cupboard | 5848–7991 × 5363–5713 | from 610 above the counter (z 1590) to the ceiling | Whole run-B wall; the loft part sits in front of the beam |

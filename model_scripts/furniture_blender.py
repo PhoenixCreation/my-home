@@ -141,21 +141,25 @@ def F(h):
     return FFL + h
 
 # ---------------------------------------------------------------- drawing room: 3-seater sofa
-# Against the long solid wall shared with Bedroom 2 (x 3583), facing the drawing room / TV wall.
+# Back against the top wall (y 8953, lift side), facing the dining room, with one end about 300 from
+# the W01 window wall (x 3583).
 sofa = Piece("sofa", "3-seater sofa")
-X0, X1, Y0, Y1 = 3603, 4483, 5340, 7440            # 880 deep x 2100 long
-ARM = 180
-for (lx, ly) in ((X0 + 40, Y0 + 40), (X1 - 80, Y0 + 40), (X0 + 40, Y1 - 80), (X1 - 80, Y1 - 80)):
-    sofa.box(M["black"], lx, ly, lx + 40, ly + 40, F(0), F(70))
-sofa.box(M["fabric"], X0, Y0, X1, Y1, F(70), F(260), bevel=15)                       # base
-sofa.box(M["fabric"], X0, Y0 + ARM, X0 + 170, Y1 - ARM, F(260), F(800), bevel=25)    # back frame
-for y0, y1 in ((Y0, Y0 + ARM), (Y1 - ARM, Y1)):
-    sofa.box(M["fabric"], X0, y0, X1, y1, F(260), F(620), bevel=30)                  # arms
-seat = (Y1 - Y0 - 2 * ARM) / 3
+LEN, DEP, ARM = 2100, 880, 180
+SX0, BACK = 3583 + 300, 8953 - 20             # left end (x) and back face (y)
+def sbox(material, u0, v0, u1, v1, z0, z1, bevel=0.0):
+    """u along the sofa from its x-start, v from the back towards the front (-y)."""
+    sofa.box(material, SX0 + u0, BACK - v1, SX0 + u1, BACK - v0, z0, z1, bevel)
+for (lu, lv) in ((40, 40), (40, DEP - 80), (LEN - 80, 40), (LEN - 80, DEP - 80)):
+    sbox(M["black"], lu, lv, lu + 40, lv + 40, F(0), F(70))
+sbox(M["fabric"], 0, 0, LEN, DEP, F(70), F(260), bevel=15)                         # base
+sbox(M["fabric"], ARM, 0, LEN - ARM, 170, F(260), F(800), bevel=25)                # back frame
+for u0, u1 in ((0, ARM), (LEN - ARM, LEN)):
+    sbox(M["fabric"], u0, 0, u1, DEP, F(260), F(620), bevel=30)                    # arms
+seat = (LEN - 2 * ARM) / 3
 for i in range(3):
-    a, b = Y0 + ARM + i * seat + 4, Y0 + ARM + (i + 1) * seat - 4
-    sofa.box(M["cushion"], X0 + 340, a, X1 - 20, b, F(260), F(440), bevel=35)        # seat cushions
-    sofa.box(M["cushion"], X0 + 170, a, X0 + 340, b, F(270), F(760), bevel=40)       # back cushions
+    a, b = ARM + i * seat + 4, ARM + (i + 1) * seat - 4
+    sbox(M["cushion"], a, 340, b, DEP - 20, F(260), F(440), bevel=35)              # seat cushions
+    sbox(M["cushion"], a, 170, b, 340, F(270), F(760), bevel=40)                   # back cushions
 sofa.build()
 
 # ---------------------------------------------------------------- Bedroom 2 (small): bed + cupboard
@@ -223,20 +227,18 @@ wardrobe("cupboard_small", "Small bedroom cupboard", "y", 5104, 7239, 3468 - 610
 # centred between the window wall and the cupboard.
 bed("bed_master", "Master bed (6 × 6 ft)", 1829, 1829, "-y", 1429 - (1829 + 50) / 2, 230)
 
-# Cupboard on the wall shared with Toilet 1, 2 ft deep from the column C2 face (x 3353), up to the toilet door.
-wardrobe("cupboard_master", "Master bedroom cupboard", "y", 115, 2075, 3353 - 610, 610)
+# Cupboard on the wall shared with Toilet 1, 2 ft deep and flush to that wall (x 3468), up to the toilet
+# door. Column C2 (x 3353-3583, y 0-1200) is boxed in inside the cupboard.
+wardrobe("cupboard_master", "Master bedroom cupboard", "y", 115, 2075, 3468 - 610, 610)
 
-# L-shaped computer table in the corner facing the entry door (window wall x 115 / shared wall y 4089).
-desk = Piece("desk_l", "L-shaped computer table")
+# Computer table along the shared bedroom wall (y 4089), from the window-wall corner.
+desk = Piece("desk", "Computer table")
 T = 25
 H = 750
-desk.box(M["oak"], 115, 3489, 1615, 4089, F(H - T), F(H), bevel=3)        # leg along the shared wall
-desk.box(M["oak"], 115, 2289, 715, 3489, F(H - T), F(H), bevel=3)         # leg along the window wall
-desk.box(M["white"], 1597, 3489, 1615, 4089, F(0), F(H - T))              # end panel
-desk.box(M["white"], 115, 2289, 715, 2307, F(0), F(H - T))                # end panel
-desk.box(M["white"], 115, 4071, 1597, 4089, F(300), F(H - T))             # modesty panels
-desk.box(M["white"], 115, 2307, 133, 4071, F(300), F(H - T))
-desk.box(M["white"], 680, 3454, 715, 3489, F(0), F(H - T))                # inner corner leg
+desk.box(M["oak"], 115, 3489, 1615, 4089, F(H - T), F(H), bevel=3)        # top, 1500 x 600
+desk.box(M["white"], 1597, 3489, 1615, 4089, F(0), F(H - T))              # end panels
+desk.box(M["white"], 115, 3489, 133, 4089, F(0), F(H - T))
+desk.box(M["white"], 133, 4071, 1597, 4089, F(300), F(H - T))             # modesty panel
 desk.build()
 
 # ---------------------------------------------------------------- kitchen
