@@ -92,7 +92,7 @@ Notes:
 | C1 | 0 – 1200 | 0 – 230 | 1200 × 230 **[photo]**. The drawing shows 230 × 950 along the window wall, but the master-bedroom photo shows the pier on the bottom wall, like C3 in Bedroom 2 |
 | C2 | 3353 – 3583 | 0 – 1200 | 230 × 1200 |
 | C3 | 0 – 1200 | 7124 – 7354 | 1200 × 230 |
-| C4 | 3353 – 3583 | 6154 – 7354 | 230 × 1200 |
+| C4 | 3353 – 3583 | 6154 – 7354 | 230 × 1200 on the drawing. **Not built [owner]**: the Bedroom 2 / drawing room wall is a plain 115 wall here; removed from the model |
 | C5 | 7999 – 8229 | 610 – 1810 | 230 × 1200 |
 | C6 | 7999 – 8229 | 3466 – 4666 | 230 × 1200 |
 | C7 | 7999 – 8229 | 7983 – 9183 | 230 × 1200 |
@@ -315,7 +315,11 @@ The low errors confirm the plan geometry: room sizes, all door and window positi
   - across the kitchen/drawing line (y 5598–5828, x 3583–7999).
 - **Ceiling** measures about 2.80–2.85 m above SSL, consistent with the assumed 2.80 soffit.
 - **Floor**:
-  - 600 × 600 white glossy vitrified tiles, axis-aligned. Joints measured at x ≈ 3761 + 600n and y ≈ 3520 + 600n.
+  - 600 × 600 (2 ft) white glossy vitrified tiles, axis-aligned, ~3 mm dark joints. Each zone has its own joint grid, measured by rectifying the floor in each photo (accuracy about ±2 cm):
+    - Drawing + dining + kitchen (one continuous grid): full tiles start at the main-door corner. Joints at x = 7999 − 600n and y = 8953 − 600n, so the cut row is against the x 3583 wall (≈215 mm) and the toilet wall y 2940 lands on a joint.
+    - Bedroom 1: joints at x = 3468 − 600n (full tiles from the door wall, ≈350 mm cut at the window wall) and y = 4054 − 600n (≈35 mm cut row along the shared bedroom wall).
+    - Bedroom 2: joints at x = 3468 − 600n and y = 7239 − 600n (full tiles from the top wall, ≈35 mm cut row along the shared bedroom wall).
+    - Skirting pieces are cut from the same tiles, and their joints line up with the floor joints.
   - About 100 mm tile skirting.
   - The wash has a dark grey anti-skid floor.
 - **Walls**: all painted white, including columns and beams.
@@ -329,3 +333,19 @@ The low errors confirm the plan geometry: room sizes, all door and window positi
   - black aluminium 2-track sliding frames with a dark granite reveal lining;
   - W03 also has a fixed top light ≈420 mm deep.
 - **Not installed**: AC indoor/outdoor units, hob, all furniture.
+
+## 13. Planned furniture (in the model, movable in the web viewer)
+
+Built by `model_scripts/furniture_blender.py`. Positions are the starting layout; each piece can be moved, rotated and reset in the web page.
+
+| Piece | Footprint (x × y, mm) | Height | Notes |
+|---|---|---|---|
+| 3-seater sofa | 3603–4483 × 5340–7440 | 800 | Against the long solid wall shared with Bedroom 2 (x 3583), facing the drawing room |
+| Small bedroom bed | 115–1537 × 5144–7124 | headboard 1000 | 4.5 × 6.25 ft mattress; head on the top wall (C3 face), side on the window wall, opposite the door |
+| Small bedroom cupboard | 2858–3468 × 5104–7239 | to beam bottom (2295 above floor) | 2 ft deep, on the wall shared with the drawing/dining room |
+| Master bed | 490–2369 × 230–2134 | headboard 1000 | 6 × 6 ft mattress; head on the wall opposite the shared bedroom wall |
+| Master bedroom cupboard | 2743–3353 × 115–2075 | to beam bottom | 2 ft deep from the C2 column face, on the wall shared with Toilet 1, up to the toilet door |
+| L-shaped computer table | 115–1615 × 3489–4089 and 115–715 × 2289–3489 | 750 | In the corner facing the entry door (window wall / shared bedroom wall) |
+| Kitchen trolleys, sink side | under run A, y 2365–3480 (sink unit, 2 doors) and 3520–5078 (two 3-drawer trolleys) | under the counter | Between the existing granite supports |
+| Kitchen trolleys, drawing-room side | under run B, x 5848–7349 | under the counter | Two 3-drawer trolleys |
+| Kitchen wall cupboard | 5848–7991 × 5363–5713 | from 610 above the counter (z 1590) to the ceiling | Whole run-B wall; the loft part sits in front of the beam |

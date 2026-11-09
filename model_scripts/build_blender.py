@@ -150,8 +150,38 @@ def add_tile_grid(m, w, h, grout_rgb, offset=(0.0, 0.0), axes="XY"):
     nt.links.new(out(comb, "Vector"), inp(br, "Vector"))
     nt.links.new(out(br, "Color"), inp(p, "Base Color"))
 
-# 600x600 floor tiles; joints measured in the dining photo at x = 3761, 4348, 4956.. and y = 3520, 4125..
-add_tile_grid(M["floor"], 0.6, 0.6, (0.62, 0.62, 0.60), offset=(-0.161, -0.520))
+def tile_image(name, px, grout_px, base_srgb, grout_srgb):
+    """One square tile with half a grout joint on every edge, so it repeats seamlessly (exports to glTF)."""
+    import numpy as np
+    old = bpy.data.images.get(name)
+    if old:
+        bpy.data.images.remove(old)
+    img = bpy.data.images.new(name, px, px, alpha=False)
+    a = np.empty((px, px, 4), np.float32)
+    a[...] = (*base_srgb, 1.0)
+    d = np.minimum(np.arange(px), np.arange(px)[::-1]).astype(np.float32) + 0.5   # distance to nearest edge
+    w = np.clip(grout_px / 2 + 0.5 - d, 0, 1)                                      # 1 inside the joint, soft 1px edge
+    m = np.maximum(w[:, None], w[None, :])[..., None]
+    a[..., :3] = a[..., :3] * (1 - m) + np.array(grout_srgb, np.float32) * m
+    img.pixels.foreach_set(a.ravel())
+    img.update()
+    img.pack()
+    return img
+
+def use_tile_image(m, img):
+    nt = m.node_tree
+    p = next(n for n in nt.nodes if n.type == "BSDF_PRINCIPLED")
+    tex = nt.nodes.new("ShaderNodeTexImage")
+    tex.image = img
+    tex.interpolation = "Linear"
+    tex.extension = "REPEAT"
+    uvn = nt.nodes.new("ShaderNodeUVMap")
+    nt.links.new(next(s for s in uvn.outputs if s.identifier == "UV"), next(s for s in tex.inputs if s.identifier == "Vector"))
+    nt.links.new(next(s for s in tex.outputs if s.identifier == "Color"), next(s for s in p.inputs if s.identifier == "Base Color"))
+
+# 600x600 (2 ft) vitrified floor tiles. The joint layout per room was measured from the site photos
+# (see FLOOR_ZONES below); one texture repeat = one tile, laid out through each zone's UVs.
+use_tile_image(M["floor"], tile_image("I601_Floor_Tile_600", 512, 4, (0.94, 0.94, 0.925), (0.40, 0.40, 0.38)))
 add_tile_grid(M["wetfloor"], 0.3, 0.3, (0.12, 0.12, 0.12))
 
 # ---------------------------------------------------------------- geometry helpers
@@ -220,8 +250,9 @@ for n, p in WALLS.items():
 
 COLUMNS = {
     # C1: drawing shows 230x950 along the window wall; the master-bedroom photo shows it along the bottom wall
+    # C4 (3353-3583 x 6154-7354, Bedroom 2 / drawing room wall) is on the drawing but not built.
     "C1": rect(0, 0, 1200, 230), "C2": rect(3353, 0, 3583, 1200), "C3": rect(0, 7124, 1200, 7354),
-    "C4": rect(3353, 6154, 3583, 7354), "C5": rect(7999, 610, 8229, 1810),
+    "C5": rect(7999, 610, 8229, 1810),
     "C6": rect(7999, 3466, 8229, 4666), "C7": rect(7999, 7983, 8229, 9183),
 }
 for n, p in COLUMNS.items():
@@ -267,7 +298,33 @@ FOOTPRINT = [(0,0),(3583,0),(3583,610),(4883,610),(4883,0),(6399,0),(6399,610),(
              (8229,0),(8229,9183),(2753,9183),(2753,8953),(3353,8953),(3353,7354),(0,7354)]
 prism("Floor_Slab_RCC", "Structure", M["slab"], FOOTPRINT, -150, 0)
 WET = [rect(3583, 725, 4883, 2825), rect(4998, 115, 6284, 2210), rect(6399, 725, 7999, 2325)]
-prism("Floor_Finish_80mm (600x600 vitrified)", "Structure", M["floor"], FOOTPRINT, 0, FFL)
+
+# Floor tiles: each zone is laid on its own 600 grid. A full tile starts at the anchor (a joint line in
+# x and in y). Anchors were measured by rectifying the floor in each site photo:
+#   main (drawing + dining + kitchen): full tiles from the main-door corner (x 7999 wall, y 8953 wall)
+#   bedrooms: full tiles from the door wall (x 3468); Bedroom 2 also from its top wall (y 7239);
+#   Bedroom 1 has a ~35 mm cut row against the shared wall (joint at y 4054).
+# Zone borders run along the middle of the partition walls.
+FLOOR_ZONES = {
+    "Main": ([(3525,0),(3583,0),(3583,610),(4883,610),(4883,0),(6399,0),(6399,610),(7999,610),(7999,0),
+              (8229,0),(8229,9183),(2753,9183),(2753,8953),(3353,8953),(3353,7354),(3525,7354)], (7999, 8953)),
+    "Bedroom1": (rect(0, 0, 3525, 4146), (3468, 4054)),
+    "Bedroom2": (rect(0, 4146, 3525, 7354), (3468, 7239)),
+}
+TILE = 600
+
+def floor_zone(name, pts, anchor):
+    def b(bm):
+        bm_prism(bm, pts, 0, FFL)
+        uv = bm.loops.layers.uv.new("UVMap")
+        for f in bm.faces:
+            for l in f.loops:
+                x, y = l.vert.co.x / S, l.vert.co.y / S
+                l[uv].uv = ((x - anchor[0]) / TILE, (y - anchor[1]) / TILE)
+    return make(name, "Structure", M["floor"], b)
+
+for zn, (pts, anchor) in FLOOR_ZONES.items():
+    floor_zone(f"Floor_Finish_{zn} (600x600 vitrified)", pts, anchor)
 boxes("Floor_Finish_Toilets_Wash (anti-skid)", "Structure", M["wetfloor"],
       [(p[0][0], p[0][1], p[2][0], p[2][1], 0, FFL + 1) for p in WET])
 ceil = prism("Ceiling_Slab", "Ceiling (hidden)", M["slab"], FOOTPRINT, SOFFIT, FTF)
