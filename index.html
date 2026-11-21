@@ -411,6 +411,9 @@
           if (obj.userData.walk_ceiling) {
             ceiling = obj;
             ceiling.visible = mode === 'walk';
+            // Approximate interior light bouncing up onto the ceiling. The scene's
+            // directional lights are above it, so they cannot light its underside.
+            obj.material.emissiveIntensity = 0.28;
             ceilingFinish = { material: obj.material, original: obj.material.color.clone() };
             return;
           }
@@ -654,6 +657,7 @@
       ceilingColor = value;
       if (!ceilingFinish) return;
       applySectionColor(ceilingFinish, value || wallColor);
+      ceilingFinish.material.emissive.copy(ceilingFinish.material.color);
       $('ceiling-color').value = `#${ceilingFinish.material.color.getHexString()}`;
       $('ceiling-reset').disabled = !value;
     }
