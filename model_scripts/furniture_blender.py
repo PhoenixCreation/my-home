@@ -171,15 +171,19 @@ def F(h):
     return FFL + h
 
 
-def glass_door(p, material, x0, x1, y0, y1, z0, z1, *, frame, pane):
+def glass_door(p, material, a0, a1, d0, d1, z0, z1, *, frame, pane, along="x"):
+    def panel_box(mat, start, end, front, back, bottom, top, section):
+        plan = (start, front, end, back) if along == "x" else (front, start, back, end)
+        p.box(mat, *plan, bottom, top, section=section)
+
     rail = 26
-    for x in (x0, x1 - rail):
-        p.box(material, x, y0, x + rail, y1, z0, z1, section=frame)
+    for a in (a0, a1 - rail):
+        panel_box(material, a, a + rail, d0, d1, z0, z1, frame)
     for z in (z0, z1 - rail):
-        p.box(material, x0 + rail, y0, x1 - rail, y1, z, z + rail, section=frame)
-    middle = (y0 + y1) / 2
-    p.box(M["glass"], x0 + rail, middle - 1.5, x1 - rail, middle + 1.5,
-          z0 + rail, z1 - rail, section=pane)
+        panel_box(material, a0 + rail, a1 - rail, d0, d1, z, z + rail, frame)
+    middle = (d0 + d1) / 2
+    panel_box(M["glass"], a0 + rail, a1 - rail, middle - 1.5, middle + 1.5,
+              z0 + rail, z1 - rail, pane)
 
 
 # ---------------------------------------------------------------- drawing room: 3-seater sofa
@@ -203,6 +207,31 @@ for i in range(3):
     sbox(f"Seat cushion {i + 1}", M["cushion"], a, 340, b, DEP - 20, F(260), F(440), bevel=35)
     sbox(f"Back cushion {i + 1}", M["cushion"], a, 170, b, 340, F(270), F(760), bevel=40)
 sofa.build()
+
+# ---------------------------------------------------------------- drawing room: floating TV cabinet
+# Keep clear of both the kitchen partition and the open entrance door.
+tv = Piece("tv_cabinet", "TV cabinet", fixed=True)
+front, wall = 7624, 7999
+start, end = 5850, 7950
+bottom, top = F(305), F(610)
+width = (end - start) / 3
+tv.box(M["oak"], wall - 18, start, wall, end, top, SOFFIT, section="Design sheet")
+for z in (bottom, top - 18):
+    tv.box(M["walnut"], front + 18, start, wall, end, z, z + 18, section="Cabinet frame")
+tv.box(M["walnut"], wall - 12, start, wall, end, bottom + 18, top - 18, section="Cabinet frame")
+for a in (start, start + width, start + 2 * width, end - 18):
+    tv.box(M["walnut"], front + 18, a, wall - 12, a + 18, bottom + 18, top - 18, section="Cabinet frame")
+for i in range(3):
+    a0, a1 = start + i * width + 2, start + (i + 1) * width - 2
+    label = f"Drawer front {i + 1}"
+    if i == 1:
+        glass_door(tv, M["walnut"], a0, a1, front, front + 18, bottom + 2, top - 2,
+                   frame=label, pane="Center glass pane", along="y")
+    else:
+        tv.box(M["walnut"], front, a0, front + 18, a1, bottom + 2, top - 2, section=label)
+    middle = (a0 + a1) / 2
+    tv.box(M["steel"], front - 14, middle - 65, front, middle + 65, top - 22, top - 12, section="Handles")
+tv.build()
 
 # ---------------------------------------------------------------- dining: fold-up tabletop on the kitchen stub
 table = Piece("dining_table", "Folding dining table", fixed=True, fold_pivot=(5688, 5378, F(735)))
