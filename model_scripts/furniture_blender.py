@@ -116,6 +116,14 @@ class Piece:
                     edges = list({e for v in vs for e in v.link_edges})
                     bmesh.ops.bevel(bm, geom=edges, offset=bevel * S, segments=2, affect="EDGES",
                                     profile=0.5, clamp_overlap=True)
+            # Planar UVs keep grain vertical on upright faces and map one repeat per metre.
+            bm.normal_update()
+            uv_layer = bm.loops.layers.uv.new("UVMap")
+            for face in bm.faces:
+                axis = max(range(3), key=lambda dim: abs(face.normal[dim]))
+                u, v = ((1, 2), (0, 2), (0, 1))[axis]
+                for loop in face.loops:
+                    loop[uv_layer].uv = (loop.vert.co[u], loop.vert.co[v])
             me = bpy.data.meshes.new(f"FURN_{self.key}_{material.name[6:]}")
             bm.to_mesh(me)
             bm.free()
