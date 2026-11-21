@@ -99,6 +99,7 @@ M = dict(
     rcc=mat("I601_RCC_Painted", (0.88, 0.88, 0.86), 0.85),
     common=mat("I601_Common_Wall", (0.70, 0.70, 0.70), 0.9),
     slab=mat("I601_Concrete_Slab", (0.45, 0.45, 0.45), 0.95),
+    ceiling=mat("I601_Ceiling_Paint_White", (0.91, 0.91, 0.89), 0.85),
     floor=mat("I601_Floor_Vitrified_White_600", (0.86, 0.86, 0.84), 0.12),
     wetfloor=mat("I601_Floor_Antiskid_Grey", (0.22, 0.22, 0.22), 0.7),
     ledge=mat("I601_Ledge_Stone", (0.62, 0.60, 0.55), 0.8),
@@ -327,7 +328,8 @@ for zn, (pts, anchor) in FLOOR_ZONES.items():
     floor_zone(f"Floor_Finish_{zn} (600x600 vitrified)", pts, anchor)
 boxes("Floor_Finish_Toilets_Wash (anti-skid)", "Structure", M["wetfloor"],
       [(p[0][0], p[0][1], p[2][0], p[2][1], 0, FFL + 1) for p in WET])
-ceil = prism("Ceiling_Slab", "Ceiling (hidden)", M["slab"], FOOTPRINT, SOFFIT, FTF)
+ceil = prism("Ceiling_Slab", "Ceiling (hidden)", M["ceiling"], FOOTPRINT, SOFFIT, FTF)
+ceil["walk_ceiling"] = 1
 
 # ---------------------------------------------------------------- finishes (skirting, wall tiles)
 import json as _json, os as _os
@@ -400,12 +402,16 @@ door_frame("D03_Toilet1", (3468, 2075, 3583, 2825), "y", arch=8)
 door_frame("D03_Toilet2", (4998, 2210, 5748, 2325), "x", arch=8)
 LEAF_TOP = BEAM - 50
 # Hinge sides as drawn and confirmed by handle positions in the photos; leaves shown open 90 deg.
-boxes("D01_Main_Leaf (open, hinged at x7999 jamb as in photo)", "Windows & Doors", M["maindoor"],
-      [(7899, 8003, 7949, 8953, FFL, LEAF_TOP)])
-boxes("D02_Bedroom2_Leaf", "Windows & Doors", M["door"], [(2733, 4254, 3533, 4289, FFL, LEAF_TOP)])
-boxes("D02_Bedroom1_Leaf", "Windows & Doors", M["door"], [(2733, 4004, 3533, 4039, FFL, LEAF_TOP)])
-boxes("D03_Toilet1_Leaf", "Windows & Doors", M["door"], [(3518, 2740, 4168, 2775, FFL, LEAF_TOP)])
-boxes("D03_Toilet2_Leaf", "Windows & Doors", M["door"], [(5048, 1625, 5083, 2275, FFL, LEAF_TOP)])
+for key, label, bounds, material in (
+    ("D01_Main", "Main entrance", (7899, 8003, 7949, 8953), M["maindoor"]),
+    ("D02_Bedroom1", "Master bedroom door", (2733, 4004, 3533, 4039), M["door"]),
+    ("D02_Bedroom2", "Small bedroom door", (2733, 4254, 3533, 4289), M["door"]),
+    ("D03_Toilet1", "Ensuite bathroom door", (3518, 2740, 4168, 2775), M["door"]),
+    ("D03_Toilet2", "Common bathroom door", (5048, 1625, 5083, 2275), M["door"]),
+):
+    leaf = boxes(f"{key}_Leaf", "Windows & Doors", material, [(*bounds, FFL, LEAF_TOP)])
+    leaf["door_finish"] = key
+    leaf["door_label"] = label
 
 # ---------------------------------------------------------------- ledges, railings
 LEDGES = {"ODU_Ledge_Bedroom1": rect(-600, 900, 0, 2900),

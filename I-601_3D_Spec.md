@@ -334,18 +334,22 @@ The low errors confirm the plan geometry: room sizes, all door and window positi
   - W03 also has a fixed top light ≈420 mm deep.
 - **Not installed**: AC indoor/outdoor units, hob, all furniture.
 
-## 13. Planned furniture (in the model, movable in the web viewer)
+## 13. Planned furniture in the walkthrough
 
-Built by `model_scripts/furniture_blender.py`. Positions are the starting layout; each piece can be moved, rotated and reset in the web page.
+Built by `model_scripts/furniture_blender.py`. In Overview, select a piece to edit its section colors and, for freestanding furniture, move or rotate it. The folding table and dressing mirrors can be opened from the same panel. The Wall color panel includes shared wall paint, a separate ceiling option, and individual room-door colors. Walk mode shows the ceiling.
 
 | Piece | Footprint (x × y, mm) | Height | Notes |
 |---|---|---|---|
 | 3-seater sofa | 3883–5983 × 8053–8933 | 800 | Back on the top wall (y 8953, lift side), facing the dining room, one end 300 from the W01 window wall |
 | Small bedroom bed | 115–1537 × 5144–7124 | headboard 1000 | 4.5 × 6.25 ft mattress; head on the top wall (C3 face), side on the window wall, opposite the door |
-| Small bedroom cupboard | 2858–3468 × 5104–7239 | to beam bottom (2295 above floor) | 2 ft deep, on the wall shared with the drawing/dining room |
-| Master bed | 490–2369 × 230–2134 | headboard 1000 | 6 × 6 ft mattress; head on the wall opposite the shared bedroom wall |
-| Master bedroom cupboard | 2858–3468 × 115–2075 | to beam bottom | 2 ft deep, flush to the wall shared with Toilet 1, up to the toilet door; column C2 is boxed in inside it |
+| Small bedroom cupboard | 2858–3468 × 5104–7239 | to beam bottom (2295 above floor) | 610 deep, with a hinged door at the entry, two sliding-style doors, and a slim pull-out dressing mirror at the far end |
+| Small bedroom overhead storage | 2858–3353 × 4204–7124 | beam bottom to ceiling | Front aligned with the cupboard. Runs above the entry door to the far beam face |
+| Master bed | 115–1994 × 230–2134 | headboard 1000 | 6 × 6 ft mattress, with its long side against the window wall and head against the column face |
+| Master bedside storage | 1200–1994 × 115–230 (excluding pulls) | floor to beam bottom | Shallow glass-front cupboard above the headboard. Four drawer fronts below face the aisle beside the bed |
+| Master bedroom cupboard | 2858–3468 × 115–2075 | to beam bottom | 610 deep, with two sliding-style doors and a slim pull-out dressing mirror at the far end from the ensuite door |
+| Master bedroom overhead storage | 2858–3353 × 230–3974 | beam bottom to ceiling | Front aligned with the cupboard. Runs between the beam faces, above the ensuite and entry doors |
+| Folding dining table | 4638–5733 × 4953–5803 when open | tabletop 760 above floor | 1050 × 850 tabletop mounted on the dining face of the kitchen partition. Folds up against the wall |
 | Computer table | 115–1615 × 3489–4089 | 750 | 1500 × 600, along the shared bedroom wall from the window-wall corner |
 | Kitchen trolleys, sink side | under run A, y 2365–3480 (sink unit, 2 doors) and 3520–5078 (two 3-drawer trolleys) | under the counter | Between the existing granite supports |
 | Kitchen trolleys, drawing-room side | under run B, x 5848–7349 | under the counter | Two 3-drawer trolleys |
-| Kitchen wall cupboard | 5848–7991 × 5363–5713 | from 610 above the counter (z 1590) to the ceiling | Whole run-B wall; the loft part sits in front of the beam |
+| Kitchen wall cupboard | 5848–7991 × 5363–5713 | from 610 above the counter (z 1590) to the ceiling | Glass-front lower row with shelves, and a solid upper row in front of the beam |
