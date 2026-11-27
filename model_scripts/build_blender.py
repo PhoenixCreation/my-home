@@ -520,7 +520,7 @@ for t, x, y in (("BEDROOM 1", 1790, 2900), ("BEDROOM 2", 1790, 4800), ("TOILET 1
 # hide context collections by default
 for cname in ("Ceiling (hidden)", "Context Above (hidden)"):
     for ob in COLL[cname].all_objects:
-        ob.hide_set(True)
+        ob.hide_viewport = True
         ob.hide_render = True
 
 # ---------------------------------------------------------------- light + camera

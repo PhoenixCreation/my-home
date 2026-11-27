@@ -39,7 +39,10 @@ def mat(name, rgb, rough=0.6, metal=0.0, alpha=1.0):
         s.default_value = val
     m.diffuse_color = (*rgb, alpha)
     if alpha < 1.0:
-        m.surface_render_method = "BLENDED"
+        if hasattr(m, "surface_render_method"):
+            m.surface_render_method = "BLENDED"
+        else:
+            m.blend_method = "BLEND"
     return m
 
 M = dict(
@@ -344,13 +347,13 @@ def bedroom_loft(key, label, y0, y1, doors):
 
 wardrobe("cupboard_small", "Small bedroom cupboard", 5104, 7239,
          mirror_at_start=False, single_width=450)
-bedroom_loft("loft_small", "Small bedroom overhead storage", 4204, 7124, 5)
+bedroom_loft("loft_small", "Small bedroom overhead storage", 5104, 7239, 4)
 
 # ---------------------------------------------------------------- Bedroom 1 (master)
 # Head on the column face; long side against the window wall.
 bed("bed_master", "Master bed (6 × 6 ft)", 1829, 1829, "-y", 115, 230)
 wardrobe("cupboard_master", "Master bedroom cupboard", 115, 2075, mirror_at_start=True)
-bedroom_loft("loft_master", "Master bedroom overhead storage", 230, 3974, 6)
+bedroom_loft("loft_master", "Master bedroom overhead storage", 115, 2075, 4)
 
 # The 115 mm recess between the wall and the C1 face runs behind the headboard.
 # End the cabinet at the aisle-side edge of the bed so the lower drawers face that aisle.

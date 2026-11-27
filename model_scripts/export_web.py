@@ -4,10 +4,14 @@ Exports the apartment meshes, including the ceiling used in Walk mode, except la
 above. Furniture roots and hinges travel with their custom properties in glTF extras. The script
 replaces the MODEL_BASE64 string in index.html.
 """
-import bpy, base64, os, re
+import bpy, base64, os, re, sys
 
 ROOT = (os.path.dirname(bpy.data.filepath) if bpy.data.filepath
         else os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.insert(0, os.path.join(ROOT, "model_scripts"))
+from wall_finishes import prepare_wall_finishes
+prepare_wall_finishes()
+
 SKIP = {"Labels", "Context Above (hidden)", "Photo Cameras"}
 GLB = os.path.join(bpy.app.tempdir or "/tmp", "I-601_web.glb")
 
@@ -22,9 +26,13 @@ for c in bpy.data.collections["I-601"].children:
 if bpy.context.mode != "OBJECT":
     bpy.ops.object.mode_set(mode="OBJECT")
 bpy.ops.object.select_all(action="DESELECT")
-hidden = [o for o in keep if o.hide_get()]
+hidden = [(o, o.hide_get(), o.hide_viewport) for o in keep]
 for o in keep:
-    o.hide_set(False)
+    o.hide_viewport = False
+bpy.context.view_layer.update()
+for o in keep:
+    if o.hide_get():
+        o.hide_set(False)
     o.select_set(True)
 bpy.context.view_layer.objects.active = keep[0]
 
@@ -34,9 +42,12 @@ try:
         export_yup=True, export_apply=False, export_cameras=False, export_lights=False,
         export_image_format="AUTO", export_animations=False)
 finally:
-    for o in hidden:
-        o.select_set(False)
-        o.hide_set(True)
+    for o, was_hidden, viewport_hidden in hidden:
+        if was_hidden or viewport_hidden:
+            o.select_set(False)
+        if was_hidden:
+            o.hide_set(True)
+        o.hide_viewport = viewport_hidden
 
 data = open(GLB, "rb").read()
 html_path = os.path.join(ROOT, "index.html")
