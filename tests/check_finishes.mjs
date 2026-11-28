@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import vm from 'node:vm';
 const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const module = html.match(/<script type="module">([\s\S]*?)<\/script>/)[1];
-const functions = ['applyWallColor', 'syncWallReset', 'applyWallFinish', 'applyCeilingColor', 'saveFurniture', 'restoreFurniture'];
+const functions = ['applyWallColor', 'syncWallReset', 'applyWallFinish', 'applyCeilingColor', 'captureFurnitureState', 'saveFurniture', 'restoreFurniture'];
 const source = functions.map(name => {
   const start = module.indexOf(`    function ${name}(`);
   const end = module.indexOf('\n    }', start) + 6;

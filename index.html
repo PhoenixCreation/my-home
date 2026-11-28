@@ -102,7 +102,10 @@
     .chip-btn.on .switch::after { transform: translateX(11px); }
     .furn-panel { position: absolute; z-index: 3; top: 136px; right: 28px; display: none; width: 292px; max-height: calc(100dvh - 152px); overflow-y: auto; overscroll-behavior: contain; touch-action: pan-y; padding: 16px 16px 14px; border: 1px solid #ffffffbc; border-radius: 16px; background: var(--paper); box-shadow: var(--shadow); backdrop-filter: blur(22px); }
     .furn-panel.visible { display: block; }
-    #wall-panel { z-index: 5; }
+    #wall-panel, #layout-panel { z-index: 5; }
+    #layout-status { margin-top: 10px; }
+    .layout-actions button:disabled { opacity: .45; cursor: default; }
+    .layout-actions { display: flex; gap: 6px; margin-top: 12px; }
     .finish-list { display: grid; gap: 2px; }
     .finish-row { display: flex; min-height: 34px; align-items: center; justify-content: space-between; gap: 12px; color: #465148; font-size: 12px; }
     .finish-row input { width: 38px; height: 30px; padding: 2px; border: 1px solid #dce0d8; border-radius: 6px; background: #fff; cursor: pointer; }
@@ -130,10 +133,11 @@
     .dim-label { position: absolute; padding: 3px 7px; border-radius: 7px; color: #fff; background: #23402fe6; box-shadow: 0 2px 8px #0003; font-size: 10px; font-weight: 700; white-space: nowrap; font-variant-numeric: tabular-nums; transform: translate(-50%, -50%); }
     .dim-label.touching { background: #b5562fe6; }
     @media (max-width: 700px) {
+      .furn-bar .chip-btn { padding: 0 8px; font-size: 10px; }
       .furn-bar { top: calc(max(12px, env(safe-area-inset-top)) + 52px); right: max(13px, env(safe-area-inset-right)); }
       .chip-btn { min-height: 34px; padding: 0 10px; font-size: 10px; }
       .furn-panel { top: auto; left: max(12px, env(safe-area-inset-left)); right: max(12px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom)); width: auto; max-height: min(52dvh, calc(100dvh - 120px)); }
-      #wall-panel { top: calc(max(12px, env(safe-area-inset-top)) + 100px); bottom: auto; left: auto; width: min(272px, calc(100vw - 24px)); }
+      #wall-panel, #layout-panel { top: calc(max(12px, env(safe-area-inset-top)) + 100px); bottom: auto; left: auto; width: min(272px, calc(100vw - 24px)); }
     }
     @media (max-width: 700px) {
       .topbar { top: max(12px, env(safe-area-inset-top)); left: max(13px, env(safe-area-inset-left)); right: max(13px, env(safe-area-inset-right)); align-items: center; gap: 8px; }
@@ -230,7 +234,19 @@
       <button id="furn-toggle" class="chip-btn on" type="button" aria-pressed="true" title="Show or hide all furniture (F)"><span class="switch"></span>Furniture</button>
       <button id="furn-reset-all" class="chip-btn" type="button" title="Put every piece back where it started">Reset all</button>
       <button id="wall-toggle" class="chip-btn" type="button" aria-expanded="false" aria-controls="wall-panel">Wall color</button>
+      <button id="layout-toggle" class="chip-btn" type="button" aria-expanded="false" aria-controls="layout-panel">Layouts</button>
     </div>
+    <section id="layout-panel" class="furn-panel" aria-labelledby="layout-title">
+      <button id="layout-close" class="intro-close" type="button" aria-label="Close layouts">×</button>
+      <h2 id="layout-title" class="furn-title">Save &amp; load a layout</h2>
+      <p class="furn-hint">Export a file with furniture positions, colors, uploaded textures, room finishes and your current view. Import a saved file to replace the current layout.</p>
+      <div class="layout-actions">
+        <button id="layout-export" class="primary-btn" type="button" disabled>Export</button>
+        <button id="layout-import" class="secondary-btn" type="button" disabled>Import</button>
+      </div>
+      <input id="layout-file" type="file" accept=".json,application/json" hidden>
+      <p id="layout-status" class="furn-hint" role="status" aria-live="polite"></p>
+    </section>
     <section id="wall-panel" class="furn-panel" aria-labelledby="wall-title">
       <button id="wall-close" class="intro-close" type="button" aria-label="Close room finishes">×</button>
       <h2 id="wall-title" class="furn-title">Walls, ceiling &amp; doors</h2>
@@ -333,6 +349,8 @@
     let ceilingColor;
     let wallColor;
     let wallPanelOpen = false;
+    let layoutPanelOpen = false;
+    let layoutBusy = false;
     const raycaster = new THREE.Raycaster();
     raycaster.firstHitOnly = true;
     const tmpForward = new THREE.Vector3();
@@ -471,6 +489,7 @@
         showWallColors();
         showDoorColors();
         frameApartment();
+        $('layout-export').disabled = $('layout-import').disabled = false;
         setTimeout(() => loading.classList.add('done'), 220);
         requestAnimationFrame(animate);
       }, (err) => {
@@ -484,6 +503,7 @@
       mode = nextMode;
       if (mode !== 'orbit') lastFirstPersonMode = mode;
       showWallPanel(false);
+      showLayoutPanel(false);
       const walking = mode === 'walk';
       if (ceiling) ceiling.visible = walking;
       renderer.shadowMap.enabled = !walking;
@@ -605,7 +625,7 @@
     }
 
     function updateMovement(dt) {
-      if (mode === 'orbit' || wallPanelOpen) return;
+      if (mode === 'orbit' || wallPanelOpen || layoutPanelOpen) return;
       if (!locked && !isTouchDevice) return;
       let forwardAmount = (keys.has('KeyW') ? 1 : 0) - (keys.has('KeyS') ? 1 : 0) + touchMove.y;
       let sideAmount = (keys.has('KeyD') ? 1 : 0) - (keys.has('KeyA') ? 1 : 0) + touchMove.x;
@@ -662,6 +682,7 @@
     }
 
     function showWallPanel(open) {
+      if (open) showLayoutPanel(false);
       wallPanelOpen = open;
       $('wall-panel').classList.toggle('visible', open);
       $('wall-toggle').setAttribute('aria-expanded', String(open));
@@ -675,7 +696,7 @@
     }
 
     function syncResume() {
-      resume.classList.toggle('visible', mode !== 'orbit' && !wallPanelOpen && !locked && !isTouchDevice);
+      resume.classList.toggle('visible', mode !== 'orbit' && !wallPanelOpen && !layoutPanelOpen && !locked && !isTouchDevice);
     }
 
     function applyWallColor(value, clearOverrides = true) {
@@ -847,7 +868,7 @@
       return Math.abs(p.x - f.home.x) > 1e-4 || Math.abs(p.z - f.home.z) > 1e-4 || Math.abs(f.root.rotation.y - f.home.r) > 1e-4;
     }
 
-    function saveFurniture() {
+    function captureFurnitureState() {
       const items = {}, finishes = {}, deployed = [];
       for (const f of furniture) {
         if (isMoved(f)) items[f.key] = [+f.root.position.x.toFixed(4), +f.root.position.z.toFixed(4), +f.root.rotation.y.toFixed(4)];
@@ -859,19 +880,23 @@
       for (const [key, door] of doorFinishes) {
         if (door.value) doorColors[key] = door.value;
       }
-      try {
-        localStorage.setItem(STORE_KEY, JSON.stringify({
-          visible: furnitureVisible, items, finishes, deployed, wallColor, ceilingColor, doorColors,
-          wallColors: Object.fromEntries([...wallFinishes].filter(([, section]) => section.value).map(([key, section]) => [key, section.value])),
-        }));
-      } catch (err) { /* storage may be blocked */ }
+      return {
+        visible: furnitureVisible, items, finishes, deployed, wallColor, ceilingColor, doorColors,
+        wallColors: Object.fromEntries([...wallFinishes].filter(([, section]) => section.value).map(([key, section]) => [key, section.value])),
+      };
+    }
+
+    function saveFurniture() {
+      try { localStorage.setItem(STORE_KEY, JSON.stringify(captureFurnitureState())); }
+      catch (err) { /* storage may be blocked */ }
     }
 
     const isColor = (value) => typeof value === 'string' && /^#[0-9a-f]{6}$/i.test(value);
 
-    function restoreFurniture() {
-      let data = null;
-      try { data = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (err) { /* ignore bad data */ }
+    function restoreFurniture(data) {
+      if (!data) {
+        try { data = JSON.parse(localStorage.getItem(STORE_KEY) || 'null'); } catch (err) { /* ignore bad data */ }
+      }
       if (!data) return;
       for (const f of furniture) {
         const v = data.items?.[f.key];
@@ -896,6 +921,144 @@
         if (isColor(color)) applySectionColor(door, color);
       }
       if (data.visible === false) setFurnitureVisible(false, false);
+    }
+
+    function showLayoutPanel(open) {
+      if (open) {
+        showWallPanel(false);
+        select(null);
+        keys.clear();
+        resetJoystick();
+        if (locked) document.exitPointerLock();
+      }
+      layoutPanelOpen = open;
+      $('layout-panel').classList.toggle('visible', open);
+      $('layout-toggle').setAttribute('aria-expanded', String(open));
+      syncResume();
+    }
+
+    function allFinishSections() {
+      return furniture.flatMap(item => [...item.sections.values()]);
+    }
+
+    function exportLayout() {
+      if (allFinishSections().some(section => section.upload)) throw new Error('Wait for texture uploads to finish before saving or loading a layout.');
+      const textures = Object.create(null);
+      for (const section of allFinishSections()) {
+        if (!section.texture) continue;
+        const url = section.textureUrl || section.texture.image?.src;
+        if (!url) throw new Error('A texture could not be exported. Upload that texture again and retry.');
+        textures[section.textureKey] = url;
+      }
+      return {
+        format: 'hets-home-layout', version: 1,
+        state: captureFurnitureState(), textures,
+        view: { mode, position: camera.position.toArray(), target: orbit.target.toArray(), yaw, pitch, introDismissed },
+      };
+    }
+
+    function validateLayout(data) {
+      const record = value => !!value && typeof value === 'object' && !Array.isArray(value);
+      const fail = () => { throw new Error('This is not a compatible Het’s Home layout file.'); };
+      if (!record(data) || data.format !== 'hets-home-layout' || data.version !== 1 || !record(data.state) || !record(data.textures)) fail();
+      const state = data.state;
+      if (typeof state.visible !== 'boolean' || !Array.isArray(state.deployed)) fail();
+      for (const field of ['items', 'finishes', 'wallColors', 'doorColors']) if (!record(state[field])) fail();
+      for (const field of ['wallColor', 'ceilingColor']) if (state[field] !== undefined && !isColor(state[field])) fail();
+      const items = new Map(furniture.map(item => [item.key, item]));
+      const vector = value => Array.isArray(value) && value.length === 3 && value.every(n => Number.isFinite(n) && Math.abs(n) <= 1000);
+      for (const [key, position] of Object.entries(state.items)) {
+        const item = items.get(key);
+        if (!item || item.fixed || !vector(position) || position[0] < BOUNDS.minX || position[0] > BOUNDS.maxX || position[1] < BOUNDS.minZ || position[1] > BOUNDS.maxZ) fail();
+      }
+      for (const key of state.deployed) {
+        const item = items.get(key);
+        if (!item || (!item.hinge && !item.mirror.length)) fail();
+      }
+      for (const [key, colors] of Object.entries(state.finishes)) {
+        const item = items.get(key);
+        if (!item || !record(colors)) fail();
+        for (const [name, color] of Object.entries(colors)) if (!item.sections.has(name) || !isColor(color)) fail();
+      }
+      for (const [key, color] of Object.entries(state.wallColors)) if (!wallFinishes.has(key) || !isColor(color)) fail();
+      for (const [key, color] of Object.entries(state.doorColors)) if (!doorFinishes.has(key) || !isColor(color)) fail();
+      const sections = new Map(allFinishSections().map(section => [section.textureKey, section]));
+      for (const [key, url] of Object.entries(data.textures)) {
+        if (!sections.has(key) || typeof url !== 'string' || !/^data:image\/(png|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(url)) fail();
+      }
+      if (data.view !== undefined) {
+        const view = data.view;
+        if (!record(view) || !['orbit', 'walk', 'free'].includes(view.mode) || !vector(view.position) || !vector(view.target)
+            || !Number.isFinite(view.yaw) || !Number.isFinite(view.pitch) || typeof view.introDismissed !== 'boolean') fail();
+      }
+      return data;
+    }
+
+    async function importLayout(input) {
+      const data = validateLayout(input);
+      const sections = allFinishSections();
+      if (sections.some(section => section.upload)) throw new Error('Wait for texture uploads to finish before saving or loading a layout.');
+      // Decode every image before changing either the current layout or its stored copy.
+      const loaded = new Map();
+      const results = await Promise.allSettled(Object.entries(data.textures).map(async ([key, url]) => {
+        loaded.set(key, await loadFinishTexture(url));
+      }));
+      if (results.some(result => result.status === 'rejected')) {
+        for (const texture of loaded.values()) texture.dispose();
+        throw new Error('An included texture could not be opened. The current layout was kept.');
+      }
+      const previous = new Map();
+      try {
+        for (const key of [STORE_KEY, ...sections.map(section => section.textureKey)]) previous.set(key, localStorage.getItem(key));
+        // Free old textures before writing the replacement, so equal-sized imports fit.
+        for (const section of sections) localStorage.removeItem(section.textureKey);
+        for (const [key, url] of Object.entries(data.textures)) localStorage.setItem(key, url);
+        localStorage.setItem(STORE_KEY, JSON.stringify(data.state));
+      } catch {
+        // Roll back storage as well as leaving the scene intact on quota/permission errors.
+        try {
+          for (const key of previous.keys()) localStorage.removeItem(key);
+          for (const [key, value] of previous) if (value !== null) localStorage.setItem(key, value);
+        } catch { /* storage may have become unavailable */ }
+        for (const texture of loaded.values()) texture.dispose();
+        throw new Error('Couldn’t save this layout on the device. Free browser storage and retry. The current layout was kept.');
+      }
+      select(null);
+      drag = tap = null;
+      keys.clear();
+      resetJoystick();
+      for (const item of furniture) {
+        resetItem(item);
+        configureItem(item, false);
+        for (const section of item.sections.values()) {
+          section.upload = null;
+          setFinishTexture(section, null);
+          applySectionColor(section);
+        }
+      }
+      for (const door of doorFinishes.values()) applySectionColor(door);
+      ceilingColor = undefined;
+      applyWallColor();
+      setFurnitureVisible(true, false);
+      restoreFurniture(data.state);
+      applyWallColor(wallColor, false);
+      for (const section of wallFinishes.values()) applyWallFinish(section, section.value);
+      for (const section of sections) {
+        const texture = loaded.get(section.textureKey);
+        if (texture) setFinishTexture(section, texture, data.textures[section.textureKey]);
+      }
+      showDoorColors();
+      if (data.view) {
+        introDismissed = data.view.introDismissed;
+        setMode(data.view.mode);
+        camera.position.fromArray(data.view.position);
+        orbit.target.fromArray(data.view.target);
+        yaw = data.view.yaw;
+        pitch = data.view.pitch;
+        if (mode === 'orbit') orbit.update(); else { updateLook(); syncRoom(); }
+        // setMode closes finish panels; leave the import result accessible.
+        showLayoutPanel(true);
+      }
     }
 
     function configureItem(item, deployed) {
@@ -923,7 +1086,8 @@
       return texture;
     }
 
-    function setFinishTexture(section, texture) {
+    function setFinishTexture(section, texture, url) {
+      section.textureUrl = texture ? (url || texture.image?.src) : undefined;
       section.texture?.dispose();
       section.texture = texture;
       section.material.map = texture || section.originalMap;
@@ -937,7 +1101,7 @@
         try {
           const url = localStorage.getItem(section.textureKey);
           if (/^data:image\/(webp|png);base64,/.test(url || '')) {
-            setFinishTexture(section, await loadFinishTexture(url));
+            setFinishTexture(section, await loadFinishTexture(url), url);
           }
         } catch {
           // Keep the saved color if the texture cannot be read.
@@ -947,6 +1111,7 @@
     }
 
     async function uploadFinishTexture(sections, file) {
+      if (layoutBusy) return 'Wait for the layout import to finish.';
       const request = Symbol();
       const active = () => sections.every((section) => section.upload === request);
       for (const section of sections) section.upload = request;
@@ -980,7 +1145,7 @@
           }
           return 'Couldn’t save the image. Try a smaller image or remove an existing texture.';
         }
-        for (const section of sections) setFinishTexture(section, texture.clone());
+        for (const section of sections) setFinishTexture(section, texture.clone(), url);
       } catch {
         if (active()) return 'Couldn’t open that image. Try a PNG, JPEG, or WebP.';
       } finally {
@@ -1397,6 +1562,45 @@
     window.addEventListener('pointerup', endPointer);
     window.addEventListener('pointercancel', endPointer);
 
+    $('layout-toggle').addEventListener('click', () => showLayoutPanel(!layoutPanelOpen));
+    $('layout-close').addEventListener('click', () => {
+      showLayoutPanel(false);
+      $('layout-toggle').focus();
+    });
+    $('layout-export').addEventListener('click', () => {
+      try {
+        const contents = JSON.stringify(exportLayout(), null, 2);
+        const url = URL.createObjectURL(new Blob([contents], { type: 'application/json' }));
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `hets-home-${new Date().toISOString().replace(/[:.]/g, '-')}.json`;
+        document.body.append(link);
+        link.click();
+        link.remove();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+        $('layout-status').textContent = 'Layout exported. Keep the JSON file to restore or share it.';
+      } catch (err) { $('layout-status').textContent = err.message; }
+    });
+    $('layout-import').addEventListener('click', () => $('layout-file').click());
+    $('layout-file').addEventListener('change', async (event) => {
+      const file = event.target.files?.[0];
+      event.target.value = '';
+      if (!file) return;
+      layoutBusy = true;
+      $('layout-export').disabled = $('layout-import').disabled = true;
+      $('layout-status').textContent = 'Loading layout…';
+      try {
+        if (file.size > 50 * 1024 * 1024) throw new Error('This file is too large. Choose a layout under 50 MB.');
+        await importLayout(JSON.parse(await file.text()));
+        $('layout-status').textContent = 'Layout imported and saved on this device.';
+      } catch (err) {
+        $('layout-status').textContent = `Import failed. ${err instanceof SyntaxError ? 'Choose a valid layout JSON file.' : err.message}`;
+      } finally {
+        layoutBusy = false;
+        $('layout-export').disabled = $('layout-import').disabled = false;
+      }
+    });
+
     furnToggle.addEventListener('click', () => setFurnitureVisible(!furnitureVisible));
     furnResetAll.addEventListener('click', () => {
       furniture.forEach(resetItem);
@@ -1492,7 +1696,7 @@
 
       // One-finger drag looks around while walking or flying.
       canvasEl.addEventListener('pointerdown', (event) => {
-        if (event.pointerType !== 'touch' || mode === 'orbit' || wallPanelOpen || lookPointerId !== null) return;
+        if (event.pointerType !== 'touch' || mode === 'orbit' || wallPanelOpen || layoutPanelOpen || lookPointerId !== null) return;
         lookPointerId = event.pointerId;
         lookLast.x = event.clientX;
         lookLast.y = event.clientY;
@@ -1532,7 +1736,7 @@
       };
 
       joystick.addEventListener('pointerdown', (event) => {
-        if (mode === 'orbit' || wallPanelOpen || joyPointerId !== null) return;
+        if (mode === 'orbit' || wallPanelOpen || layoutPanelOpen || joyPointerId !== null) return;
         event.preventDefault();
         const rect = joystick.getBoundingClientRect();
         joyHome.x = rect.left + rect.width / 2;
@@ -1557,13 +1761,18 @@
       stage.addEventListener('contextmenu', (event) => event.preventDefault());
     }
     document.addEventListener('mousemove', (event) => {
-      if (!locked || mode === 'orbit' || wallPanelOpen) return;
+      if (!locked || mode === 'orbit' || wallPanelOpen || layoutPanelOpen) return;
       yaw -= event.movementX * lookSensitivity;
       pitch = THREE.MathUtils.clamp(pitch - event.movementY * lookSensitivity, -1.42, 1.42);
       updateLook();
     });
     document.addEventListener('keydown', (event) => {
       if (event.target.closest?.('input, textarea')) return;
+      if (event.code === 'Escape' && layoutPanelOpen) {
+        showLayoutPanel(false);
+        $('layout-toggle').focus();
+        return;
+      }
       if (event.code === 'Escape' && wallPanelOpen) {
         showWallPanel(false);
         return;
@@ -1609,7 +1818,7 @@
     try {
       setupViewer();
       renderer.domElement.addEventListener('click', () => {
-        if (!isTouchDevice && mode !== 'orbit' && !locked && !wallPanelOpen) renderer.domElement.requestPointerLock?.();
+        if (!isTouchDevice && mode !== 'orbit' && !locked && !wallPanelOpen && !layoutPanelOpen) renderer.domElement.requestPointerLock?.();
       });
       if (isTouchDevice) setupTouchInput();
       updateHelp();

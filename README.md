@@ -37,7 +37,19 @@ Room resets inherit the whole-home paint; **Restore wall finish** clears all wal
 customizations. Colors persist locally alongside furniture and door finishes.
 The ceiling follows whole-home paint unless given its own color.
 
+## Export and import
+
+Open **Layouts** in the toolbar, then choose **Export** to download a JSON backup.
+Use **Import** to load it on this or another device. Import replaces the current
+layout, including furniture positions and rotations, folding/sliding configurations,
+furniture visibility, furniture colors and uploaded textures, wall/room colors,
+ceiling and door colors, and the camera view. Imported finishes and furniture are
+also saved locally. Export first if you want to keep the layout you are replacing.
+Files include the textures themselves; they do not need the original image files.
+Invalid files or textures leave the current layout unchanged.
+
 ## Checks
 
-Run `python3 tests/check_model.py` and `node tests/check_finishes.mjs` to check the
-embedded room finishes, cupboard/loft bounds, saved colors, reset behavior and branding.
+Run `python3 tests/check_model.py`, `node tests/check_finishes.mjs`, and
+`node tests/check_layouts.mjs` to check the
+embedded room finishes, cupboard/loft bounds, saved colors, reset behavior, branding, layout round trips, and import failure handling.
